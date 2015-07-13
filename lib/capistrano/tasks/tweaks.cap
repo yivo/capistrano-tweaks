@@ -1,0 +1,71 @@
+def run_interactively(command, server)
+  exec %Q(ssh #{server.user}@#{server.hostname} -t '#{command}')
+end
+
+def install_config(config, options = {})
+  puts options
+  config_path     = options[:to] || options[:as]
+  config_path   ||= File.join(options[:dir], options[:name])
+  config_name     = File.basename(config_path)
+  config_tmp_path = "#{fetch(:tmp_dir)}/#{config_name}"
+  backup_config(config_path) if options[:backup] != false
+  upload_config(config, to: config_tmp_path)
+  sudo "mv #{config_tmp_path} #{config_path}"
+end
+
+def resolve_config_template(config_name, options = {})
+  basename    = File.basename(config_name, '.*')
+  dot_ext     = File.extname(config_name).sub(/\A\.+/, '.')
+
+  role        = options[:role]
+  hostname    = options[:hostname]
+  hostname    = (role.properties.name || role.hostname) if role && hostname.nil?
+
+  stage       = options[:stage]
+  stage       = fetch(:stage) if stage.nil?
+
+  tmpl_dirs   = ['config', options[:dir]].reject(&:nil?)
+  tmpl_exts   = ['.erb', '']
+  tmpl_names  = %W(
+    #{basename}_#{hostname}_#{stage}#{dot_ext}
+    #{basename}_#{hostname}#{dot_ext}
+    #{basename}_#{stage}#{dot_ext}
+    #{basename}#{dot_ext}
+  )
+
+  tmpl_dirs.each do |dir|
+    tmpl_names.each do |name|
+      tmpl_exts.each do |ext|
+        path = "#{dir}/#{name}#{ext}"
+        if File.file?(path)
+          info "Resolved config template '#{path}'"
+          return File.read(path)
+        end
+      end
+    end
+  end
+
+  error "Config template '#{config_name}' could not be resolved!"
+end
+
+def render_config(config_name, options = {})
+  template = options[:template] || resolve_config_template(config_name, options)
+  erb_config_template(template, options)
+end
+
+def erb_config_template(template, options = {})
+  @role = options[:role]
+  ERB.new(template).result(binding)
+end
+
+def upload_config(config, to:)
+  stream = StringIO.new(config)
+  upload!(stream, to)
+end
+
+def backup_config(config_path)
+  config_exists = test("[ -f #{config_path} ]")
+  backup_exists = test("[ -f #{config_path}.original.bak ]")
+  version       = backup_exists ? 'previous' : 'original'
+  sudo "cp #{config_path} #{config_path}.#{version}.bak" if config_exists
+end
