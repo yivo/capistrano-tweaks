@@ -80,7 +80,5 @@ end
 
 def config_backup_remotely(config_path)
   config_exists = test("[ -f #{config_path} ]")
-  backup_exists = test("[ -f #{config_path}.original.bak ]")
-  version       = backup_exists ? 'previous' : 'original'
-  sudo "cp #{config_path} #{config_path}.#{version}.bak" if config_exists
+  sudo "cp #{config_path} #{config_path}.bak" if config_exists
 end
