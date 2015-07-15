@@ -6,41 +6,52 @@ def run_interactively(command, server)
   exec %Q(ssh #{server.user}@#{server.hostname} -t '#{command}')
 end
 
-def config_define_install_tasks(options = {})
-  desc 'Install config'
+def config_define_tasks(options = {})
+  desc "#{cmd.to_s.capitalize} config"
   task :install do
     on roles(result_of(options[:roles])) do |role|
-      config_name = result_of(options[:config_name])
-      template    = config_resolve_template(config_name,
-        dir:  result_of(options[:config_dir]),
-        role: role
-      )
-      config      = config_render_template(template, role: role)
-      config_install_remotely(config, options.merge(role: role))
+      name     = File.basename(result_of(options[:template_path]), '*.erb')
+      dir      = File.dirname(result_of(options[:template_path]))
+      template = config_resolve_template(name, dir: dir, role: role)
+      config   = config_render_template(template, role: role)
+      config_install_remotely(config, result_of(options[:install_path]))
     end
+  end
+
+  desc 'Uninstall config'
+  task :uninstall do
+    on roles(result_of(options[:roles]))
+      config_uninstall_remotely(result_of(options[:install_path]))
   end
 end
 
-def config_install_remotely(config, options = {})
-  to   = result_of(options[:install_to]) || result_of(options[:to])
-  as   = result_of(options[:install_as]) || result_of(options[:as])
-  name = result_of(options[:install_name]) || result_of(options[:name])
-  dir  = result_of(options[:install_dir]) || result_of(options[:dir])
+def config_install_remotely(config, config_path)
+  config_backup_remotely(config_path)
 
-  config_path     = to || as
-  config_path   ||= File.join(dir, name)
   config_name     = File.basename(config_path)
   config_tmp_path = "#{fetch(:tmp_dir)}/#{config_name}"
-  config_backup_remotely(config_path) if options[:backup] != false
-  stream = StringIO.new(config)
+  stream          = StringIO.new(config)
+
   upload!(stream, config_tmp_path)
+
   sudo "mkdir -p #{File.dirname(config_path)}"
   sudo "mv #{config_tmp_path} #{config_path}"
 end
 
-def config_resolve_template(config_name, options = {})
-  basename    = File.basename(config_name, '.*')
-  dot_ext     = File.extname(config_name).sub(/\A\.+/, '.')
+def config_uninstall_remotely(config_path)
+  config_path = result_of(config_path)
+  config_backup_remotely(config_path)
+  sudo "rm -f #{config_path}"
+end
+
+def config_backup_remotely(config_path)
+  config_exists = test("[ -f #{config_path} ]")
+  sudo "cp #{config_path} #{config_path}.bak" if config_exists
+end
+
+def config_resolve_template(name, options = {})
+  basename    = File.basename(name, '.*')
+  dot_ext     = File.extname(name).sub(/\A\.+/, '.')
 
   role        = options[:role]
   hostname    = options[:hostname]
@@ -49,7 +60,7 @@ def config_resolve_template(config_name, options = {})
   stage       = options[:stage]
   stage       = fetch(:stage) if stage.nil?
 
-  tmpl_dirs   = ['config', options[:dir]].reject(&:nil?)
+  tmpl_dirs   = ['config', [options[:dir]]].flatten.reject(&:nil?)
   tmpl_exts   = ['.erb', '']
   tmpl_names  = %W(
     #{basename}_#{hostname}_#{stage}#{dot_ext}
@@ -58,19 +69,19 @@ def config_resolve_template(config_name, options = {})
     #{basename}#{dot_ext}
   )
 
-  tmpl_dirs.each do |dir|
-    tmpl_names.each do |name|
-      tmpl_exts.each do |ext|
-        path = "#{dir}/#{name}#{ext}"
-        if File.file?(path)
-          info "Resolved config template '#{path}'"
-          return File.read(path)
+  tmpl_dirs.each do |tdir|
+    tmpl_names.each do |tname|
+      tmpl_exts.each do |text|
+        tpath = "#{tdir}/#{tname}#{text}"
+        if File.file?(tpath)
+          info "Resolved config template '#{tpath}'"
+          return File.read(tpath)
         end
       end
     end
   end
 
-  error "Config template '#{config_name}' could not be resolved!"
+  error "Config template '#{name}' could not be resolved!"
 end
 
 def config_render_template(template, options = {})
@@ -78,7 +89,13 @@ def config_render_template(template, options = {})
   ERB.new(template).result(binding)
 end
 
-def config_backup_remotely(config_path)
-  config_exists = test("[ -f #{config_path} ]")
-  sudo "cp #{config_path} #{config_path}.bak" if config_exists
+def daemon_define_control_tasks(options = {})
+  [:start, :stop, :restart, :status].each do |cmd|
+    desc "#{cmd.capitalize} #{options[:service]} service"
+    task cmd do
+      on roles(result_of(options[:roles])) do
+        sudo "/usr/bin/service #{options[:service]}"
+      end
+    end
+  end
 end
