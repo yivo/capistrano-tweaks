@@ -1,3 +1,11 @@
+def try_load_default_stage(stage = :production)
+  if File.file?(File.join(stage_config_path, "#{ARGV[0]}.rb"))
+    invoke(ARGV[0])
+  else
+    invoke(stage)
+  end
+end
+
 def result_of(proc)
   proc.is_a?(Proc) ? proc.call : proc
 end
@@ -7,7 +15,7 @@ def run_interactively(command, server)
 end
 
 def config_define_tasks(options = {})
-  desc "#{cmd.to_s.capitalize} config"
+  desc 'Install config'
   task :install do
     on roles(result_of(options[:roles])) do |role|
       name     = File.basename(result_of(options[:template_path]), '*.erb')
@@ -20,8 +28,20 @@ def config_define_tasks(options = {})
 
   desc 'Uninstall config'
   task :uninstall do
-    on roles(result_of(options[:roles]))
+    on roles(result_of(options[:roles])) do
       config_uninstall_remotely(result_of(options[:install_path]))
+    end
+  end
+
+  desc 'Fix config permissions'
+  task :permissions do
+    on roles(result_of(options[:roles])) do
+      config_fix_permissions(
+        result_of(options[:install_path]),
+        result_of(options[:mode]),
+        result_of(options[:owner])
+      )
+    end
   end
 end
 
@@ -42,6 +62,11 @@ def config_uninstall_remotely(config_path)
   config_path = result_of(config_path)
   config_backup_remotely(config_path)
   sudo "rm -f #{config_path}"
+end
+
+def config_fix_permissions(config_path, mode, owner)
+  sudo "chmod #{mode} #{config_path}" if mode
+  sudo "chown #{owner} #{config_path}" if owner
 end
 
 def config_backup_remotely(config_path)
@@ -89,12 +114,12 @@ def config_render_template(template, options = {})
   ERB.new(template).result(binding)
 end
 
-def daemon_define_control_tasks(options = {})
+def daemon_define_tasks(options = {})
   [:start, :stop, :restart, :status].each do |cmd|
     desc "#{cmd.capitalize} #{options[:service]} service"
     task cmd do
       on roles(result_of(options[:roles])) do
-        sudo "/usr/bin/service #{options[:service]}"
+        sudo "/usr/bin/service #{options[:service]} #{cmd}"
       end
     end
   end
