@@ -1,0 +1,8 @@
+namespace :deploy do
+  desc 'Deploy project first time and start puma'
+  task :initial do
+    on roles(:app) do
+      invoke 'deploy'
+    end
+  end
+end

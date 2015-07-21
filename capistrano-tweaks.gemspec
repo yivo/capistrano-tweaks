@@ -19,6 +19,7 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency 'capistrano', '~> 3.1'
   spec.add_dependency 'sshkit', '~> 1.2'
+  spec.add_dependency 'confo-config'
 
   spec.add_development_dependency 'bundler', '~> 1.7'
   spec.add_development_dependency 'rake', '~> 10.0'
