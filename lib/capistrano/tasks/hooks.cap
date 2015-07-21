@@ -5,7 +5,7 @@ end
 
 before 'deploy:starting', 'mysuperhooks' do
   if fetch(:scm) == :git
-    invoke 'deploy:git:check_revision'
+    invoke 'git:check_revision'
   end
 end
 
