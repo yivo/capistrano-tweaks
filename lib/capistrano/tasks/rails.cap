@@ -31,3 +31,5 @@ namespace :rails do
     end
   end
 end
+
+set :application_root, -> { fetch(:rails_root, current_path) }

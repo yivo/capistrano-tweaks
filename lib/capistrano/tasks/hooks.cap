@@ -8,4 +8,3 @@ before 'deploy:starting', 'mysuperhooks' do
     invoke 'git:check_revision'
   end
 end
-

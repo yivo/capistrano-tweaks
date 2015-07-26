@@ -161,10 +161,7 @@ def config_resolve_template(template_path, options = {})
     end
   end
 
-  require 'pry'
-  binding.pry
-
-  error "Config template '#{name}' could not be resolved!"
+  error "Config template '#{template_path}' could not be resolved!"
 end
 
 def config_render_template(template, options = {})
