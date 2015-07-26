@@ -2,9 +2,10 @@ namespace :deploy do
   desc 'Deploy project first time'
   task :initial do
     if Rake::Task.task_defined?('deploy:migrate')
-      before 'deploy:migrate', 'rails:database:create'
-      before 'deploy:migrate', 'rails:database:seed'
+      Rake::Task['deploy:migrate'].clear
     end
+
+    after 'deploy:updated', 'rails:database:setup'
     invoke 'deploy'
   end
 end
