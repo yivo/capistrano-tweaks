@@ -47,6 +47,6 @@ namespace :rails do
   end
 end
 
-set :application_root, -> { fetch(:rails_root, current_path) }
+set :application_root, -> { fetch(:rails_root, release_path) }
 set :rvm_map_bins, fetch(:rvm_map_bins, []) + %w( rails )
 set :rbenv_map_bins, fetch(:rbenv_map_bins, []) + %w( rails )
