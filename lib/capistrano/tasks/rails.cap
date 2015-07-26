@@ -2,7 +2,8 @@ namespace :rails do
   desc 'Remote application console'
   task :console => ['deploy:set_rails_env'] do
     on release_roles(:app) do
-      cmd = "cd #{release_path} && (RAILS_ENV=#{fetch(:rails_env)} #{SSHKit.config.command_map[:rails]} console)"
+      cmd = "cd #{fetch(:application_root)}"
+      cmd = "#{cmd} && (RAILS_ENV=#{fetch(:rails_env)} #{SSHKit.config.command_map[:rails]} console)"
       info cmd
       run_interactively(cmd, @host)
     end
@@ -13,7 +14,7 @@ namespace :rails do
       desc "#{cmd.to_s.capitalize} database via rake db:#{cmd}"
       task Hash[cmd, ['deploy:set_rails_env']] do
         on primary fetch(:migration_role) do
-          within release_path do
+          within fetch(:application_root) do
             with rails_env: fetch(:rails_env) do
               rake "db:#{cmd}"
             end
@@ -25,7 +26,9 @@ namespace :rails do
     desc 'Remote database console'
     task :console => ['deploy:set_rails_env'] do
       on release_roles(:app) do
-        cmd = "RAILS_ENV=#{fetch(:rails_env)} #{SSHKit.config.command_map[:rails]} dbconsole"
+        cmd = "cd #{fetch(:application_root)}"
+        cmd = "#{cmd} && (RAILS_ENV=#{fetch(:rails_env)} #{SSHKit.config.command_map[:rails]} dbconsole)"
+        info cmd
         run_interactively(cmd, @host)
       end
     end
@@ -33,3 +36,5 @@ namespace :rails do
 end
 
 set :application_root, -> { fetch(:rails_root, current_path) }
+set :rvm_map_bins, fetch(:rvm_map_bins, []) + %w( rails )
+set :rbenv_map_bins, fetch(:rbenv_map_bins, []) + %w( rails )

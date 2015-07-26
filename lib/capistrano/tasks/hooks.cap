@@ -1,10 +1,1 @@
-if Rake::Task.task_defined?('deploy:migrate')
-  before 'deploy:migrate', 'rails:database:create'
-  before 'deploy:migrate', 'rails:database:seed'
-end
-
-before 'deploy:starting', 'mysuperhooks' do
-  if fetch(:scm) == :git
-    invoke 'git:check_revision'
-  end
-end
+before 'deploy:starting', 'git:check_revision'

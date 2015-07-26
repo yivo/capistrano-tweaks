@@ -1,8 +1,10 @@
 namespace :deploy do
-  desc 'Deploy project first time and start puma'
+  desc 'Deploy project first time'
   task :initial do
-    on roles(:app) do
-      invoke 'deploy'
+    if Rake::Task.task_defined?('deploy:migrate')
+      before 'deploy:migrate', 'rails:database:create'
+      before 'deploy:migrate', 'rails:database:seed'
     end
+    invoke 'deploy'
   end
 end
