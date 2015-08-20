@@ -5,7 +5,7 @@ namespace :deploy do
       Rake::Task['deploy:migrate'].clear
     end
 
-    after 'deploy:updated', 'rails:database:setup'
+    before 'deploy:updated', 'rails:database:setup'
     invoke 'deploy'
   end
 end
