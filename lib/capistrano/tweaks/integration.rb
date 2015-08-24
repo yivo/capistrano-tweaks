@@ -1,8 +1,8 @@
 class Integration < Confo::Config
-  subconfig :descriptions, class_name: 'Integration::Descriptions'
-  subconfig :config, class_name: 'Integration::Config'
+  includes_config :descriptions, class_name: 'Integration::Descriptions'
+  includes_config :config, class_name: 'Integration::Config'
 
-  option :roles
+  option_accessor :roles
 
   class Descriptions < Confo::Config
     def task(task, *args)
@@ -17,7 +17,7 @@ class Integration < Confo::Config
   end
 
   class Config < Confo::Config
-    subconfig :permissions, class_name: 'Integration::Permissions'
+    includes_config :permissions, class_name: 'Integration::Permissions'
 
     # option :install_path
     # option :install_name
@@ -70,8 +70,8 @@ class Integration < Confo::Config
   end
 
   class Permissions < Confo::Config
-    option :owner
-    option :mode
+    option_accessor :owner
+    option_accessor :mode
   end
 
   class << self
