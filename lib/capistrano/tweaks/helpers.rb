@@ -14,3 +14,11 @@ end
 def run_interactively(command, server)
   exec %Q(ssh #{server.user}@#{server.hostname} -t '#{command}')
 end
+
+def within_user(user, command)
+  "su #{user || fetch(:user)} #{command}"
+end
+
+def within_zsh_shell(command, options = {})
+  "#{'sudo ' if options[:sudo]}#{within_user(options[:user], "zsh -c 'source ~/.zshrc && #{command}'")}"
+end
