@@ -20,7 +20,7 @@ def within_user(user, command)
 end
 
 def within_zsh_shell(command, options = {})
-  "#{'sudo ' if options[:sudo]}#{within_user(options[:user], "zsh -c 'source ~/.zshrc && #{command}'")}"
+  "#{'sudo ' if options[:sudo]}#{within_user(options[:user], "zsh -l -c '#{command}'")}"
 end
 
 def expand_home_dir(command, options = {})
