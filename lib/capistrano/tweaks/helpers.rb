@@ -30,5 +30,10 @@ def within_zsh_shell(command, options = {})
 end
 
 def expand_home_dir(command, options = {})
-  command.gsub(/\A~/, "/home/#{options[:user]}")
+  if /\A~/ =~ command
+    command = command.gsub(/\A~\/+/, '').gsub(/\/+\z/, '')
+    "/home/#{options[:user]}/#{command}"
+  else
+    command
+  end
 end
