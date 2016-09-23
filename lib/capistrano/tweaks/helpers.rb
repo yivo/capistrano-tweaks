@@ -1,5 +1,5 @@
 def production_as_default_stage!
-  if ARGV[0] && File.file?(File.join(stage_config_path, "#{ARGV[0]}.rb"))
+  if ARGV[0] && File.file?(File.join(File.expand_path(stage_config_path, Rake.application.original_dir), "#{ARGV[0]}.rb"))
     invoke(ARGV[0])
   else
     invoke(:production)
