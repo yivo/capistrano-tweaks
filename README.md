@@ -1,31 +1,22 @@
-# Capistrano::Tweaks
+## Tweaks for Capistrano 3.x
 
-TODO: Write a gem description
+[![Gem Version](https://badge.fury.io/rb/capistrano-tweaks.svg)](https://badge.fury.io/rb/capistrano-tweaks)
 
-## Installation
+## Features
+Tasks:
+* `rails:console`
 
-Add this line to your application's Gemfile:
+Utils:
+* `execute_interactively`
+* `expand_home_dir`
 
+## Installing gem
+Add to your Gemfile:
 ```ruby
-gem 'capistrano-tweaks'
+gem 'capistrano-tweaks', '~> 1.0', require: false
 ```
 
-And then execute:
-
-    bundle
-
-Or install it yourself as:
-
-    $ gem install capistrano-tweaks
-
-## Usage
-
-TODO: Write usage instructions here
-
-## Contributing
-
-1. Fork it ( https://github.com/[my-github-username]/capistrano-tweaks/fork )
-2. Create your feature branch (`git checkout -b my-new-feature`)
-3. Commit your changes (`git commit -am 'Add some feature'`)
-4. Push to the branch (`git push origin my-new-feature`)
-5. Create a new Pull Request
+Require gem in your Capfile:
+```ruby
+require 'capistrano/tweaks'
+```

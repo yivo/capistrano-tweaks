@@ -1,15 +1,7 @@
 # encoding: UTF-8
 # frozen_string_literal: true
 
-def production_as_default_stage!
-  if ARGV[0] && File.file?(File.join(File.expand_path(stage_config_path, Rake.application.original_dir), "#{ARGV[0]}.rb"))
-    invoke(ARGV[0])
-  else
-    invoke(:production)
-  end
-end
-
-def run_interactively(command, server)
+def execute_interactively(command, server)
   exec "ssh", "#{server.user}@#{server.hostname}", "-t", command
 end
 
@@ -24,7 +16,7 @@ namespace :rails do
     on release_roles(:app) do
       within release_path do
         with rails_env: fetch(:rails_env) do
-          run_interactively command([:rails, 'console'], {}).to_command, @host
+          execute_interactively command([:rails, 'console'], {}).to_command, @host
         end
       end
     end
