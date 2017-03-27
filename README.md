@@ -12,7 +12,7 @@ gem 'capistrano-tweaks'
 
 And then execute:
 
-    $ bundle
+    bundle
 
 Or install it yourself as:
 

@@ -1,1 +1,0 @@
-load File.expand_path('../../tasks/rails.cap', __FILE__)

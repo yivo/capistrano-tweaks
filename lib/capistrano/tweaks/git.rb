@@ -1,1 +1,0 @@
-load File.expand_path('../../tasks/git.cap', __FILE__)
